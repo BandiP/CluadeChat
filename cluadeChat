@@ -1,0 +1,72 @@
+
+
+from dotenv import load_dotenv
+from anthropic import Anthropic, APIError
+import os
+# Load environment variables
+load_dotenv()
+
+# Retrieve API key securely
+#api_key = os.getenv("CLAUDE_API_KEY")
+api_key = "APIKEY"
+
+if not api_key:
+    raise ValueError(
+        "Claude API key not found. "
+        "Set CLAUDE_API_KEY in your .env file."
+    )
+
+# Initialize Anthropic client
+client = Anthropic(api_key=api_key)
+
+# Model
+modelC = "claude-sonnet-5-5"
+
+def add_user_messages(messages, text):
+    user_message = {"role":"user", "content":text}
+    messages.append(user_message)
+
+def add_resonpse_messages(messages,text):
+    reponse_message = {"role":"assistant", "content":text}
+    messages.append(reponse_message)
+
+try:
+    def chat(messages, system = None):
+        params = {
+            "model": modelC,
+            "max_tokens": 1000,
+            "messages": messages
+        }
+        if system:
+            params["system"] = system 
+
+        message = client.messages.create(**params)
+        return message.content[0]['text']
+
+except APIError as e:
+    print(f"Anthropic API error: {e}")
+
+except Exception as e:
+    print(f"Unexpected error: {e}")
+
+#User Promt chat interface 
+#initialize message chat
+while True: 
+    messages = []
+    system = """ You are Trading Expert.Instead of answering question directly, Guide the user how 
+    trading works for Equity and ETF. 
+    """
+    #Add User message to start chat
+    user_input = input("chat>") #"How can I make a profit in trading ? Answer in one sentence."
+    print("chat>",user_input )
+    add_user_messages(messages,user_input)
+    answer = chat(messages, system = system )
+    #Add Conversation context
+    add_resonpse_messages(messages,answer)
+    print("---------")
+    #Follow up User chat
+    print(answer)
+    print("---------")
+
+    #add_user_messages(messages,"Suggest the best trading app for steady and Safe growth?")
+    #answer = chat(messages)
